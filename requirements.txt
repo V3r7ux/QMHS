@@ -1,0 +1,12 @@
+numpy
+scipy
+pandas
+matplotlib
+tqdm
+dimod
+dwave-neal
+python-sat
+networkx
+dwave-networkx
+minorminer
+pytest
