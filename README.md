@@ -1,389 +1,340 @@
-# Quantum Annealing Formulations for Hitting Set Enumeration in Fault Diagnosis
+# QMHS
 
-This repository contains the replication package for the paper:
+Reproduction package for **“On the Feasibility of Quantum Annealing for Hitting Set Enumeration in Fault Diagnosis.”**
 
-> **On the Feasibility of Quantum Annealing for Hitting Set Enumeration in Fault Diagnosis**
+This repository contains the implementations, experiment drivers, benchmark data, frozen paper results, plotting scripts, and reproduction workflows used to evaluate annealing-based formulations for **Minimal Hitting Set (MHS)** and **Minimum Hitting Set** problems arising in spectrum-based fault diagnosis.
 
-The project studies whether quantum annealing can be used as a feasible backend for hitting-set enumeration in software diagnosis. It implements QUBO and PUBO formulations for both **Minimal Hitting Set** enumeration and **Minimum Hitting Set** enumeration, together with preprocessing methods, simulated annealing experiments, exact classical baselines, and minor-embedding experiments on ideal quantum-annealing hardware graphs.
+The repository supports three levels of reproduction:
 
-## Overview
+1. **Quick local reproduction** — a reduced-budget end-to-end execution of the real pipeline on the small benchmark instances.
+2. **Paper-results reproduction** — regeneration of the paper tables and figures from the frozen experimental outputs shipped with the artifact.
+3. **Full experimental reproduction** — regeneration of the raw RQ1/RQ2/RQ3 experimental data on an HPC system.
 
-In spectrum-based fault diagnosis, failing executions can be represented as conflict sets. A diagnostic candidate must contain at least one component from each conflict, and therefore corresponds to a hitting set.
+No physical quantum annealer is required. RQ1 and RQ2 use simulated annealing, while RQ3 evaluates minor embedding on idealized Zephyr and Pegasus hardware graphs.
 
-This repository studies two related enumeration tasks:
-
-* **Minimal Hitting Set enumeration**: recover all inclusion-minimal diagnoses.
-* **Minimum Hitting Set enumeration**: recover hitting sets of minimum cardinality.
-
-The implemented formulations include:
-
-* an Exact Formulation QUBO;
-* a Cardinality Sweep QUBO;
-* a Recursive PUBO formulation for Minimal Hitting Set enumeration;
-* a Minimum Hitting Set formulation with linear search and binary search;
-* singleton preprocessing;
-* dominated-conflict pruning;
-* lower-bound preprocessing;
-* greedy upper-bound computation;
-* adaptive coverage-variable reduction;
-* quadratization with ancilla reuse;
-* simulated annealing evaluation;
-* exact classical minimum-hitting-set enumeration using PySAT Hitman;
-* minor-embedding experiments on ideal Pegasus and Zephyr topologies.
-
-The repository is intended to reproduce the empirical evaluation presented in the paper and to make the proposed formulations available for further experimentation.
+---
 
 ## Repository structure
 
 ```text
 QMHS/
-  README.md
-  requirements.txt
-  requirements-hpc.txt
-  .gitignore
-
-  src/
-    algorithms/
-      classical/
-      quantum/
-    benchmark/
-    core/
-    preprocessing/
-    simulator/
-    utils/
-
-  experiments/
-    rq1_minimal_scalability/
-    rq2_minimum_scalability/
-    rq3_embedding_feasibility/
-    classical_baseline/
-
-  plotting/
-    main_plots_rq1.py
-    main_plots_rq2.py
-    main_plots_rq3.py
-
-  tests/
-    conftest.py
-    test_validation.py
-    test_preprocessing.py
-    test_qubo_formulations.py
-    test_hitman_minimum.py
-
-  data/
-    spectrasMHS2/
-    mhs2/
+├── src/
+│   ├── algorithms/
+│   ├── benchmark/
+│   ├── core/
+│   ├── simulator/
+│   └── utils/
+│
+├── experiments/
+│   ├── classical_baseline/
+│   ├── rq1_minimal_scalability/
+│   ├── rq2_minimum_scalability/
+│   └── rq3_embedding_feasibility/
+│
+├── plotting/
+│   ├── create_summary_tables.py
+│   ├── main_plots_rq1.py
+│   ├── main_plots_rq2.py
+│   └── main_plots_rq3.py
+│
+├── data/
+│   ├── spectrasMHS2/
+│   ├── mhs2/
+│   └── paper_results/
+│       ├── rq1/
+│       ├── rq2/
+│       ├── rq3/
+│       │   ├── zephyr/
+│       │   └── pegasus/
+│       └── paper_aggregated/
+│           ├── tables/
+│           ├── zephyr/
+│           └── pegasus/
+│
+├── reproduction/
+│   ├── quick/
+│   │   └── reproduce_quick.py
+│   ├── full/
+│   │   ├── README.md
+│   │   ├── rq1_minimal.slurm
+│   │   ├── rq2_minimum.slurm
+│   │   └── rq3_embedding.slurm
+│   ├── reproduce_paper.sh
+│   └── check_csvs.py
+│
+├── tests/
+├── requirements.txt
+├── requirements-hpc.txt
+└── LICENSE
 ```
 
-The `src/` directory contains the reusable implementation. The `experiments/` directory contains the scripts used to reproduce the paper experiments. The `plotting/` directory contains the plotting scripts used to generate the paper figures. The `data/` directory contains benchmark instances and reference solutions. The `tests/` directory contains small unit tests for the core logic.
+Generated outputs under `reproduction/quick_results/`, `reproduction/figures/`, and `reproduction/tables/` are not part of the frozen artifact and can be regenerated at any time.
+
+---
+
+## Experimental questions
+
+The evaluation is organized around three research questions.
+
+### RQ1 — Minimal Hitting Set enumeration
+
+RQ1 evaluates annealing-based enumeration of inclusion-minimal hitting sets using:
+
+- Cardinality Sweep;
+- Recursive PUBO;
+- Recursive PUBO with lower-bound preprocessing;
+- Recursive PUBO with adaptive coverage ancillas;
+- Recursive PUBO with all optimizations.
+
+The paper experiments use simulated annealing with a fixed budget of **2000 reads** and **10000 sweeps** per submitted QUBO.
+
+### RQ2 — Minimum Hitting Set optimization and enumeration
+
+RQ2 evaluates:
+
+- LinearSearch;
+- LinearSearch with preprocessing;
+- LinearSearch with reduced coverage ancillas;
+- LinearSearch with all optimizations;
+- BinSearch with all optimizations.
+
+The evaluation distinguishes finding at least one true minimum-cardinality hitting set from recovering the complete set of minimum-cardinality solutions.
+
+### RQ3 — Embedding feasibility
+
+RQ3 evaluates the QUBOs generated for the Minimum Hitting Set problem on idealized:
+
+- **Zephyr** graphs, used for the main-paper analysis;
+- **Pegasus** graphs, reported as an additional comparison.
+
+For the paper experiment, each submitted QUBO is embedded using **10 seeded attempts**, a **30 s timeout per attempt**, and base seed **42**. RQ3 evaluates embedding only; no physical QPU execution is performed.
+
+---
 
 ## Installation
 
-Create and activate a Python virtual environment:
+Clone the repository and retrieve the Git LFS objects:
 
 ```bash
-python -m venv .venv
-source .venv/bin/activate
+git clone https://github.com/V3r7ux/QMHS.git
+cd QMHS
+
+git lfs install
+git lfs pull
 ```
 
-Install the main dependencies:
+Create and activate a Python virtual environment, then install the dependencies:
 
 ```bash
+python3 -m venv .venv
+source .venv/bin/activate
+
+pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-The recommended content of `requirements.txt` is:
-
-```text
-numpy
-scipy
-pandas
-matplotlib
-tqdm
-dimod
-dwave-neal
-python-sat
-networkx
-dwave-networkx
-minorminer
-pytest
-```
-
-Some parts of the repository have optional dependencies.
-
-For distributed or HPC execution:
+For the distributed HPC experiments, install the additional HPC requirements:
 
 ```bash
 pip install -r requirements-hpc.txt
 ```
 
-Recommended `requirements-hpc.txt`:
+The full RQ1/RQ2 reproduction also requires a working MPI implementation on the cluster, because `mpi4py` must be able to load the system MPI library.
 
-```text
-mpi4py
+---
+
+# Reproduction workflows
+
+## 1. Quick end-to-end reproduction
+
+The quick reproduction is the recommended first check after installation.
+
+It uses the same parsers, formulations, simulators, decoding, validation, benchmark recording, Hitman baseline, and embedding code as the full experiments, but restricts the benchmark to the small universe-size instances and uses a reduced computational budget.
+
+Run:
+
+```bash
+python reproduction/quick/reproduce_quick.py
 ```
 
-## Implemented formulations
-
-### Exact Formulation
-
-Implemented in:
+The default quick configuration uses:
 
 ```text
-src/algorithms/quantum/exact_formulation.py
+Universe sizes:                 5 and 10
+Simulated annealing reads:      100
+Simulated annealing sweeps:     500
+Random seed:                    42
+Embedding topologies:           Zephyr and Pegasus
+Embedding attempts per QUBO:    2
+Embedding timeout per attempt:  5 s
 ```
 
-The Exact Formulation encodes the hitting-set constraints directly as a QUBO. Its ground-state manifold contains all hitting sets of the instance, including non-minimal supersets.
+For an even smaller installation test:
 
-This formulation is useful as a baseline and as a direct encoding of the hitting-set condition, but it is not selective for minimality.
+```bash
+python reproduction/quick/reproduce_quick.py \
+    --max-problems-per-universe 2 \
+    --overwrite
+```
 
-### Cardinality Sweep
-
-Implemented in:
+The quick workflow writes:
 
 ```text
-src/algorithms/quantum/cardinality_sweep.py
+reproduction/quick_results/
+├── rq1/
+│   ├── global_stats.csv
+│   └── length_stats.csv
+├── rq2/
+│   ├── global_stats.csv
+│   └── length_stats.csv
+├── rq3_zephyr/
+│   ├── embedding_stats.csv
+│   └── embedding_attempts.csv
+├── rq3_pegasus/
+│   ├── embedding_stats.csv
+│   └── embedding_attempts.csv
+├── hitman_minimum_runtime.csv
+└── quick_reproduction_summary.txt
 ```
 
-The Cardinality Sweep formulation adds a fixed-cardinality constraint to the Exact Formulation. For each target cardinality `K`, the corresponding QUBO has ground states representing hitting sets of cardinality `K`.
+The quick workflow is a **functional reproduction**. Its numerical results are not expected to match the paper because the annealing and embedding budgets are intentionally smaller.
 
-This formulation is used for both Minimal and Minimum Hitting Set experiments. For Minimal Hitting Set enumeration, sampled candidates are post-processed classically to check minimality.
+---
 
-### Recursive PUBO
+## 2. Reproduce the paper figures and summary tables
 
-Implemented in:
+The complete raw outputs used for the publication are included under:
 
 ```text
-src/algorithms/quantum/recursive_pubo.py
+data/paper_results/
 ```
 
-The Recursive PUBO formulation targets Minimal Hitting Set enumeration. It adds recursive penalties that suppress supersets of previously found minimal hitting sets. These penalties are naturally higher-order polynomial terms, so the implementation quadratizes them into a QUBO using auxiliary variables.
-
-The implementation includes ancilla reuse to reduce the number of auxiliary variables introduced during quadratization.
-
-### Minimum Hitting Set formulation
-
-Implemented in:
+The processed values used by the paper are frozen under:
 
 ```text
-src/algorithms/quantum/minimum_cardinality_sweep.py
+data/paper_results/paper_aggregated/
 ```
 
-The Minimum Hitting Set formulation searches for hitting sets of minimum cardinality. It supports:
+To regenerate the paper tables, processed CSVs, and figures from the supplied experimental outputs, run:
 
-* linear cardinality search;
-* binary search over cardinality sectors;
-* lower-bound preprocessing;
-* greedy upper-bound computation;
-* adaptive coverage-variable reduction.
+```bash
+bash reproduction/reproduce_paper.sh
+```
 
-Since every minimum-cardinality hitting set is inclusion-minimal, the recursive PUBO exclusion mechanism is not needed for the Minimum Hitting Set problem.
-
-### Exact classical minimum baseline
-
-Implemented in:
+This produces generated artifacts under:
 
 ```text
-src/algorithms/classical/hitman_minimum.py
+reproduction/
+├── tables/
+└── figures/
+    ├── rq1/
+    ├── rq2/
+    ├── rq3_zephyr/
+    └── rq3_pegasus/
 ```
 
-This baseline uses PySAT Hitman to enumerate all minimum-cardinality hitting sets exactly. It is used in the embedding experiments to compare the runtime of minor embedding against a task-aligned exact classical enumeration baseline.
+At the end of the workflow, `reproduction/check_csvs.py` compares the regenerated processed CSVs with the frozen paper aggregates. The check covers the three summary tables together with the RQ1, RQ2, Zephyr, and Pegasus aggregated datasets and exits with a non-zero status if a mismatch is detected.
 
-## Preprocessing utilities
+This is the recommended workflow for reproducing the **reported paper results** without rerunning the multi-day HPC experiments.
 
-Implemented in:
+---
+
+## 3. Full experimental reproduction
+
+The original raw experiments are substantially more expensive than the quick and paper-results workflows. RQ1 and RQ2 were executed in a distributed CPU environment, while RQ3 uses parallel minor-embedding attempts.
+
+Portable SLURM templates are provided under:
 
 ```text
-src/preprocessing/preprocessing_utils.py
+reproduction/full/
 ```
 
-The preprocessing module includes:
+See:
 
-* duplicate test-case removal;
-* dominated test-case removal;
-* instance validation;
-* singleton-solution pruning;
-* max-degree lower bound;
-* sum-degree lower bound;
-* greedy packing lower bound;
-* LP-relaxation lower bound;
-* greedy upper-bound computation.
+```text
+reproduction/full/README.md
+```
 
-These preprocessing methods are used to reduce the size of the generated QUBOs and to reduce the number of cardinality sectors explored by the algorithms.
+for cluster configuration, submission commands, resource requirements, expected outputs, and the order of the full reproduction workflow.
 
-## Important implementation note: QUBO constant offsets
+Typical submission from the repository root is:
 
-The mathematical formulations in the paper are written as non-negative penalty Hamiltonians whose valid configurations have energy zero.
+```bash
+sbatch reproduction/full/rq1_minimal.slurm
+sbatch reproduction/full/rq2_minimum.slurm
 
-The implementation represents QUBOs as coefficient dictionaries and drops constant offsets. Therefore, mathematical zero-energy ground states correspond to shifted energies in the code. For example, a valid hitting set may have negative QUBO energy in the implementation.
+# Zephyr
+sbatch reproduction/full/rq3_embedding.slurm
 
-This is intentional. Each algorithm provides a `ground_state_energy()` method that returns the expected shifted ground-state energy for the implemented QUBO.
+# Pegasus
+sbatch --export=ALL,EMBEDDING_TOPOLOGY=pegasus \
+    reproduction/full/rq3_embedding.slurm
+```
 
-## Running the tests
+The SLURM templates intentionally leave cluster-specific partition/account settings configurable.
 
-Run all tests with:
+---
+
+## Data
+
+### `data/spectrasMHS2/`
+
+Synthetic spectrum-based fault-localization subjects used to construct the hitting-set instances.
+
+### `data/mhs2/`
+
+Reference MHS2 outputs used as the solution oracle for the synthetic benchmark subjects.
+
+Because these data include large files, the directory is tracked with **Git LFS**. After cloning, run:
+
+```bash
+git lfs pull
+```
+
+### `data/paper_results/`
+
+Frozen experimental outputs used to generate the paper.
+
+The directory contains the RQ1 and RQ2 scalability results, RQ3 embedding results for Zephyr and Pegasus, the Hitman runtime data used in the embedding comparison, and the frozen processed values used by the figures and summary tables.
+
+These files allow the reported results to be reproduced without rerunning the full HPC experiments.
+
+---
+
+## Tests
+
+Run the repository tests with:
 
 ```bash
 python -m pytest tests -q
 ```
 
-The tests check:
+The tests cover core formulation, preprocessing, decoding, validation, and algorithmic behavior independently of the large benchmark runs.
 
-* hitting-set validation;
-* minimality validation;
-* minimum-cardinality extraction;
-* singleton preprocessing;
-* dominated-conflict pruning;
-* lower-bound preprocessing;
-* Exact Formulation behavior on the running example;
-* Cardinality Sweep behavior on the running example;
-* adaptive coverage-variable reduction;
-* Recursive PUBO exclusion penalties;
-* PySAT Hitman minimum enumeration.
+---
 
-If `python-sat` is not installed, the Hitman tests are skipped.
-```
+## Reproducibility levels
 
-## Checking that the repository compiles
+The artifact intentionally separates three different goals:
 
-From the repository root, run:
+| Workflow | Purpose | Typical environment | Expected cost |
+| --- | --- | --- | --- |
+| `reproduce_quick.py` | End-to-end functional check | Laptop/workstation | Small |
+| `reproduce_paper.sh` | Recreate paper plots/tables from frozen outputs | Laptop/workstation | Minutes |
+| `reproduction/full/*.slurm` | Regenerate raw experiment outputs | SLURM HPC cluster | Hours to days |
 
-```bash
-python -m compileall -q src experiments plotting tests
-```
+The quick reproduction should not be used to compare numerical values with the paper. The frozen paper-result workflow is the appropriate path for exact result reproduction, while the full workflow is provided for complete experimental regeneration.
 
-No output means that all Python files compiled successfully.
-
-To compile and test in one command:
-
-```bash
-python -m compileall -q src experiments plotting tests && python -m pytest tests -q
-```
-
-## Reproducing the experiments
-
-The empirical evaluation is organized around three research questions.
-
-### RQ1: Minimal Hitting Set enumeration scalability
-
-Run:
-
-```bash
-python experiments/rq1_minimal_scalability/scalability_test.py
-```
-
-This experiment evaluates Minimal Hitting Set enumeration using the Cardinality Sweep and Recursive PUBO formulations under a simulated annealing backend.
-
-The main reported metrics are:
-
-* global found ratio;
-* runtime;
-* logical variables;
-* logical couplers.
-
-### RQ2: Minimum Hitting Set optimization and enumeration
-
-Run:
-
-```bash
-python experiments/rq2_minimum_scalability/scalability_test.py
-```
-
-This experiment evaluates Minimum Hitting Set recovery using cardinality-based formulations. It compares linear search and binary search, with and without the proposed optimizations.
-
-The main reported metrics are:
-
-* global found ratio over minimum-cardinality solutions;
-* minimum-cardinality success;
-* runtime;
-* logical variables;
-* logical couplers.
-
-### RQ3: Minor-embedding feasibility
-
-Run:
-
-```bash
-python experiments/rq3_embedding_feasibility/minimum_embedding/minimum_embedding_test.py
-```
-
-This experiment constructs the logical QUBOs for the Minimum Hitting Set formulation and attempts to minor-embed them into ideal quantum-annealing hardware graphs.
-
-The embedding experiments do not execute the models on a physical quantum annealer. They measure the feasibility and cost of representing the generated logical QUBOs on sparse quantum-annealing topologies.
-
-The main reported metrics are:
-
-* embedding success;
-* number of embedding calls;
-* embedding runtime;
-* physical qubits;
-* mean chain length;
-* maximum chain length;
-* physical/logical qubit ratio;
-* embedding runtime relative to the Hitman baseline.
-
-## Regenerating the figures
-
-After running the corresponding experiments, generate the figures with:
-
-```bash
-python plotting/main_plots_rq1.py
-python plotting/main_plots_rq2.py
-python plotting/main_plots_rq3.py
-```
-
-The plotting scripts expect the experiment outputs to be available in the configured output directories.
-
-## Data
-
-The data is available at: TBA
-
-The main data directories contained in the zip archive are:
-
-```text
-data/spectrasMHS2/
-data/mhs2/
-```
-
-`spectrasMHS2/` contains generated conflict instances.
-
-`mhs2/` contains reference minimal hitting sets generated by MHS2.
-
-The reference solutions are used to validate the solutions recovered by the annealing-based formulations.
-
-To run the experiments extract the contents of the `data.zip` archive.
-
-## Reproducibility notes
-
-The simulated annealing experiments are stochastic. The experiment scripts use fixed seeds where applicable, but runtime and sampling behavior may still vary across machines.
-
-The minor-embedding experiments use heuristic embedding algorithms. Failure to find an embedding within the chosen timeout does not prove that no embedding exists. Embedding success should therefore be interpreted as a practical feasibility metric under the specified embedding budget.
-
-The embedding experiments use ideal Pegasus and Zephyr graphs. Real quantum processors may have disabled qubits or couplers, so physical-device embeddability can differ from ideal-topology embeddability.
-
-The RQ3 embedding simulator uses reference solutions only to drive the algorithmic control flow and produce the sequence of QUBOs that would be submitted. The reported RQ3 metrics are embedding metrics, not quantum-annealing solution-quality metrics.
-
-
-## Citation
-
-Citation information will be added after publication.
-
-```bibtex
-@misc{qmhs2026,
-  title  = {On the Feasibility of Quantum Annealing for Hitting Set Enumeration in Fault Diagnosis},
-  author = {TBA},
-  year   = {2026},
-  note   = {Replication package},
-  url    = {TBA}
-}
-```
+---
 
 ## License
 
-This project is licensed under the MIT License.
+This project is distributed under the license included in [`LICENSE`](LICENSE).
 
-See the `LICENSE` file for details.
+---
 
-## Contact
+## Paper
 
-For questions about the replication package, please contact the paper authors.
+**On the Feasibility of Quantum Annealing for Hitting Set Enumeration in Fault Diagnosis**
+
+If you use this artifact, please cite the accompanying paper. 
