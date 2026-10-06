@@ -1,0 +1,10 @@
+Metric,LinearSearch,Linear + all opt.,BinSearch + all opt.
+"Minimum-cardinality success, $n/N$ (%)",459/480 (95.6%),476/480 (99.2%),478/480 (99.6%)
+"Full minimum-set recovery, $n/N$ (%)",403/480 (84.0%),431/480 (89.8%),433/480 (90.2%)
+"Optimization success but incomplete enumeration, $n/N$ (%)",56/480 (11.7%),45/480 (9.4%),45/480 (9.4%)
+"Zero minimum-set recovery, $n/N$ (%)",21/480 (4.4%),4/480 (0.8%),2/480 (0.4%)
+Mean minimum-set found ratio,0.889,0.946,0.948
+Median minimum-set found ratio,1.000,1.000,1.000
+Runtime [s],"0.524 [0.000, 98.319]","0.208 [0.000, 37.448]","0.208 [0.000, 21.801]"
+Logical variables,"13 [0, 347]","12 [0, 206]","12 [0, 206]"
+Logical couplers,"49 [0, 14269]","49 [0, 4451]","49 [0, 4451]"
