@@ -43,6 +43,16 @@ import time
 import sys
 from pathlib import Path
 
+GREEN = "\033[92m"
+RESET = "\033[0m"
+
+
+def pass_text() -> str:
+    if sys.stdout.isatty():
+        return f"{GREEN}PASS{RESET}"
+    return "PASS"
+
+
 ROOT_DIR = Path(__file__).resolve().parents[2]
 print(ROOT_DIR)
 
@@ -567,7 +577,7 @@ def validate_benchmark_records(
             )
 
     print(
-        f"{label} validation: PASS "
+        f"{label} validation: {pass_text()} "
         f"({len(records.global_records)} global records)"
     )
 
@@ -668,7 +678,7 @@ def validate_embedding_records(
             )
 
     print(
-        f"RQ3 {expected_topology} validation: PASS "
+        f"RQ3 {expected_topology} validation: {pass_text()} "
         f"({len(records.embedding_records)} submitted QUBOs, "
         f"{len(records.attempt_records)} attempt records)"
     )
@@ -739,13 +749,13 @@ def write_summary(
         f"Embedding workers: {args.embedding_num_workers}",
         "",
         "Status:",
-        "  RQ1: PASS",
-        "  RQ2: PASS",
-        "  Hitman baseline: PASS",
+        f"  RQ1: {pass_text()}",
+        f"  RQ2: {pass_text()}",
+        f"  Hitman baseline: {pass_text()}",
     ]
 
     for topology in args.topologies:
-        lines.append(f"  RQ3 {topology}: PASS")
+        lines.append(f"  RQ3 {topology}: {pass_text()}")
 
     lines.extend(
         [

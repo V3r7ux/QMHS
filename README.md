@@ -160,7 +160,7 @@ python reproduction/quick/reproduce_quick.py
 The default quick configuration uses:
 
 ```text
-Universe sizes:                 5 and 10
+Universe sizes:                 5
 Simulated annealing reads:      100
 Simulated annealing sweeps:     500
 Random seed:                    42

@@ -7,6 +7,15 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+GREEN = "\033[92m"
+RESET = "\033[0m"
+
+
+def pass_text() -> str:
+    if sys.stdout.isatty():
+        return f"{GREEN}PASS{RESET}"
+    return "PASS"
+
 
 DEFAULT_RTOL = 1e-9
 DEFAULT_ATOL = 1e-12
@@ -181,7 +190,7 @@ def compare_csv(
     )
 
     if ok:
-        print("PASS")
+        print(pass_text())
         return True
 
     print("FAIL")
