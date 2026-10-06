@@ -20,7 +20,7 @@ set -euo pipefail
 # ------------------------------------------------------------
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+ROOT_DIR="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 
 PYTHON="${PYTHON:-python3}"
 
@@ -60,7 +60,7 @@ RQ3_PLOT_SCRIPT="${ROOT_DIR}/plotting/main_plots_rq3.py"
 # Output directories
 # ------------------------------------------------------------
 
-REPRO_DIR="${ROOT_DIR}/reproduction"
+REPRO_DIR="${ROOT_DIR}/reproduction/aggregated_results"
 CHECK_AGGREGATED_SCRIPT="${REPRO_DIR}/check_csvs.py"
 
 TABLE_DIR="${REPRO_DIR}/tables"

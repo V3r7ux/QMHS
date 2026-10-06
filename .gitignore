@@ -11,5 +11,6 @@ __pycache__/
 .idea/
 
 # Generated outputs
-reproduction/figures
-reproduction/tables
+reproduction/aggregated_results/figures
+reproduction/aggregated_results/tables
+reproduction/quick/quick_results
