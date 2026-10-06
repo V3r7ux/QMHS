@@ -11,8 +11,5 @@ __pycache__/
 .idea/
 
 # Generated outputs
-output/
-outputs/
-
-# Uncompressed data directory
-data/
+reproduction/figures
+reproduction/tables
