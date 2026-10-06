@@ -15,7 +15,7 @@ except ImportError:
 
 try:
     from mpi4py import MPI
-except ImportError:
+except (ImportError, RuntimeError):
     MPI = None
 
 from src.simulator.base_simulator import BaseSimulator
