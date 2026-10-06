@@ -28,7 +28,7 @@ NUM_THREADS = int(os.getenv("SLURM_CPUS_PER_TASK", "10"))
 
 SEEDS = [42, 1337, 690]
 
-OUTPUT_DIR = "output/benchmark/classical_annealing/minimal/scalability/"
+OUTPUT_DIR = "output/rq1/"
 
 
 def main():

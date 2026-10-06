@@ -16,6 +16,7 @@ from src.benchmark.embedding_benchmark import EmbeddingBenchmarkRecordSet
 from tqdm import tqdm
 
 import os
+from pathlib import Path
 
 
 TOPOLOGY = os.getenv("EMBEDDING_TOPOLOGY", "zephyr")
@@ -30,7 +31,7 @@ NUM_THREADS = int(os.getenv("SLURM_CPUS_PER_TASK", "10"))
 UNIVERSE_SIZES = [5, 10, 25, 50]
 MAX_NUM_TEST_CASES = 50
 
-OUTPUT_DIR = "output/embedding_feasability/minimum_embedding"
+OUTPUT_DIR = "output/rq3"
 
 
 def main():
@@ -165,7 +166,7 @@ def main():
                     store_attempts=True,
                 )
 
-    benchmark_records.export_csv(OUTPUT_DIR)
+    benchmark_records.export_csv( Path(OUTPUT_DIR) / TOPOLOGY)
 
 
 if __name__ == "__main__":
